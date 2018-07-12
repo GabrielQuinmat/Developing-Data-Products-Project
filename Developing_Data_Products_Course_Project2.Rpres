@@ -1,0 +1,62 @@
+Developing Data Products: Course Project
+========================================================
+author: Gabriel Quintanar
+date: July 12, 2018
+autosize: true
+
+Overview
+========================================================
+
+This presentation is a brief explanation about my course project submission. 
+<h>.
+
+The project is a Shiny Application hosted in ShinnyApps.io
+- Bullet 1
+
+For the Source Code
+- Bullet 2
+
+Project Overview
+========================================================
+
+The Project is about predicting survivors in the Titanic Dataset. As it may be guessed, this dataset is the training dataset.
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(caret); library(plyr); library(dplyr); library(tidyr)
+```
+
+```{r , echo=TRUE, warning=FALSE, message=FALSE}
+data <- read.csv("train.csv")
+summary(data)
+```
+
+Logistic Regression Model
+========================================================
+To create the logistic model, it was need to use only some of the variables and preprocess the data.
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
+data <- data %>% select(Survived, Pclass, Sex, Age, SibSp, Parch,
+                                    Fare, Embarked) %>% 
+        mutate(Age = replace_na(Age, mean(Age, na.rm = TRUE)))
+inTrain <- createDataPartition(y = data$Survived, p = 0.8, list = FALSE)
+training <- data[inTrain, ]
+testing <- data[-inTrain, ]
+model <- glm(Survived ~ ., family = binomial, data = training)
+    model <- step(model, direction = "both", trace = FALSE)
+    summary(model)
+```
+
+Logistic Plot
+========================================================
+Finally the AUC Plot from the ROCR Package (This is not showed in the shiny app)
+
+```{r echo=FALSE}
+library(ROCR)
+pred <- predict(model, newdata = testing)
+pr <- prediction(pred, testing$Survived)
+prf <- performance(pr, measure = "tpr", x.measure = "fpr")
+plot(prf)
+
+
+auc <- performance(pr, measure = "auc")
+```
+
+Accuracy: `r auc@y.values[[1]]*100`%
